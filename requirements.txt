@@ -1,0 +1,6 @@
+aiogrpc==1.8
+grpcio==1.43.0
+mavsdk==0.22.3
+protobuf==3.19.1
+pymap3d==2.7.2
+six==1.16.0
