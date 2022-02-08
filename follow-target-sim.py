@@ -16,9 +16,9 @@ async def fly_drone(model, responsiveness, pub_rc, spam_gps):
     # Get starting location from env variables
     # This should match the coordinates used by gazebo or jmavsim, which load
     # the same env variables
-    PX4_HOME_LAT = os.getenv('PX4_HOME_LAT', default=47.397742)
-    PX4_HOME_LON = os.getenv('PX4_HOME_LON', default=8.545594)
-    PX4_HOME_ALT = os.getenv('PX4_HOME_ALT', default=488)
+    PX4_HOME_LAT = float(os.getenv('PX4_HOME_LAT', default=47.397742))
+    PX4_HOME_LON = float(os.getenv('PX4_HOME_LON', default=8.545594))
+    PX4_HOME_ALT = float(os.getenv('PX4_HOME_ALT', default=488))
 
     default_height = 8.0  # in Meters
     # in Meters, this is the distance that the drone will remain away from
