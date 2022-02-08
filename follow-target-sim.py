@@ -171,7 +171,7 @@ if __name__ == "__main__":
         '--responsiveness',
         type=float,
         required=False,
-        default=0.5,
+        default=0.1,
         help='Responsiveness parameter for follow-me in range [0.0, 1.0]')
     parser.add_argument(
         '--model',
