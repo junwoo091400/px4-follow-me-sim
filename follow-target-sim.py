@@ -12,7 +12,7 @@ from mavsdk.follow_me import (Config, FollowMeError, TargetLocation)
 from target_model import simulation
 
 
-async def fly_drone(model, responsiveness, pub_rc, spam_gps):
+async def fly_drone(model, responsiveness, pub_rc, spam_gps, no_takeoff):
     # Get starting location from env variables
     # This should match the coordinates used by gazebo or jmavsim, which load
     # the same env variables
@@ -54,7 +54,7 @@ async def fly_drone(model, responsiveness, pub_rc, spam_gps):
 
     dt = 0.01
     t = 0.0
-    t_max = 60
+    t_max = 100
     time_start = time.time()
     last_update = 0
 
@@ -63,6 +63,18 @@ async def fly_drone(model, responsiveness, pub_rc, spam_gps):
             PX4_HOME_LAT, PX4_HOME_LON, PX4_HOME_ALT)
     elif model == "line":
         target_model = simulation.TargetModelStraightLine(
+            PX4_HOME_LAT, PX4_HOME_LON, PX4_HOME_ALT)
+    elif model == "rectangle":
+        target_model = simulation.TargetModelRectangle(
+            PX4_HOME_LAT, PX4_HOME_LON, PX4_HOME_ALT)
+    elif model == "point":
+        target_model = simulation.TargetModelPoint(
+            PX4_HOME_LAT, PX4_HOME_LON, PX4_HOME_ALT)
+    elif model == "unitspeed":
+        target_model = simulation.TargetModelUnitSpeed(
+            PX4_HOME_LAT, PX4_HOME_LON, PX4_HOME_ALT)
+    elif model == "go_and_stop":
+        target_model = simulation.TargetModelGoAndStop(
             PX4_HOME_LAT, PX4_HOME_LON, PX4_HOME_ALT)
 
     # Simulation loop for target model
@@ -73,6 +85,11 @@ async def fly_drone(model, responsiveness, pub_rc, spam_gps):
     target_location = None
     rtl_stop_time = None
     land_time = None
+
+    if no_takeoff:
+        takeoff = True
+        land_time = 1
+
     while(True):
         t = time.time() - time_start
         time_loop_start = time.time()
@@ -87,16 +104,16 @@ async def fly_drone(model, responsiveness, pub_rc, spam_gps):
             await drone.action.arm()
             armed = True
 
-        if not configured:
-            # Follow me Mode requires some configuration to be done before
-            # starting the mode
-            conf = Config(
-                default_height,
-                follow_distance,
-                direction,
-                responsiveness)
-            await drone.follow_me.set_config(conf)
-            configured = True
+        # if not configured:
+        #     # Follow me Mode requires some configuration to be done before
+        #     # starting the mode
+        #     conf = Config(
+        #         default_height,
+        #         follow_distance,
+        #         direction,
+        #         responsiveness)
+        #     await drone.follow_me.set_config(conf)
+        #     configured = True
 
         if not takeoff:
             print("-- Taking Off")
@@ -112,7 +129,7 @@ async def fly_drone(model, responsiveness, pub_rc, spam_gps):
         # Wait 4 seconds with next step
         if t > 12.0 and t < t_max:
             # Update target model with every timestep
-            target_model.update(t)
+            target_model.update(t - 12.0)
 
             # Send a position update at 1 Hz
             if (time_loop_start - last_update >= 1):
@@ -187,6 +204,10 @@ if __name__ == "__main__":
     parser.set_defaults(rc=True)
     parser.add_argument('--spam_gps', type=bool, required=False,
                         help='Spam GPS messages at high rates', default=False)
+    parser.add_argument(
+        '--no_takeoff',
+        action='store_true'
+    )
 
     args = parser.parse_args()
     loop = asyncio.get_event_loop()
@@ -195,4 +216,5 @@ if __name__ == "__main__":
             args.model,
             args.responsiveness,
             args.rc,
-            args.spam_gps))
+            args.spam_gps,
+            args.no_takeoff))
