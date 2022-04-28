@@ -38,10 +38,10 @@ async def fly_drone(model, responsiveness, pub_rc, spam_gps, no_takeoff):
             print(f"--- Connected to drone!")
             break
 
-    # Disable datalink failsafe or simulation won't work without QGC open
     print("--- Setting parameters...")
-    # await drone.param.set_param_int('NAV_RCL_ACT', 0)
-    await drone.param.set_param_int('NAV_DLL_ACT', 0)
+    # await drone.param.set_param_int('NAV_RCL_ACT', 0) # Disable datalink failsafe or simulation won't work without QGC open
+    # await drone.param.set_param_int('COM_RC_IN_MODE', 4) # Disable stick input
+    await drone.param.set_param_int('NAV_DLL_ACT', 0) # Set data link loss failsafe mode to 'Disabled'
     # await drone.param.set_param_float('COM_RC_LOSS_T', 1.5)
     # await drone.param.set_param_int('COM_DL_LOSS_T', 10)
 
@@ -76,6 +76,10 @@ async def fly_drone(model, responsiveness, pub_rc, spam_gps, no_takeoff):
     elif model == "go_and_stop":
         target_model = simulation.TargetModelGoAndStop(
             PX4_HOME_LAT, PX4_HOME_LON, PX4_HOME_ALT)
+    else:
+        # Not a valid model, stop the program
+        print("!!!! {} is not a valid model! Please choose a correct model. Exiting program ...".format(model))
+        return
 
     # Simulation loop for target model
     armed = False
